@@ -22,8 +22,6 @@ repo.config_reader()
 head = repo.head
 headcommit = head.commit
 
-bisect_log_file = None
-
 class Parser(argparse.ArgumentParser):
   def error(self, message):
     sys.stderr.write('error: %s\n' % message)
@@ -65,7 +63,7 @@ def bisect(args):
   else:
     sys.stderr.write('Nothing to do. Use -h for help.' + '\n')
     sys.exit(1)
-
+  print commit
   proc = subprocess.Popen(
     ['git', 'bisect', state, commit],
     stdout = subprocess.PIPE,
@@ -77,16 +75,19 @@ def bisect(args):
   returncode = proc.wait()
   sys.stdout.write(stdout)
   sys.stderr.write(stderr)
+
   return returncode
 
 def main():
   parser = Parser(description='Bisect Linux kernel')
   set_args(parser)
-  if len(sys.argv)==1:
+  if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
   args = parser.parse_args()
   bisect(args)
+  if head.commit != headcommit:
+    print "commit was changed !"
 
 if __name__ == "__main__":
   main()
