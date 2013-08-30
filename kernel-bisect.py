@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 # Copyright 2013 Igor Gnatenko
-# Author(s): Igor Gnatenko <i.gnatenko.brain@gmail.com>
+# Author(s): Igor Gnatenko <i.gnatenko.brain AT gmail DOT com>
+#            Bjorn Esser <bjoern.esser AT gmail DOT com>
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -10,9 +11,9 @@
 
 import os
 import sys
-import subprocess
 import argparse
 import git
+import sh
 
 WORK_DIR = os.path.dirname(sys.argv[0])
 
@@ -21,6 +22,12 @@ assert repo.bare == False
 repo.config_reader()  
 head = repo.head
 headcommit = head.commit
+
+def out(line):
+  sys.stdout.write(line)
+
+def err(line):
+  sys.stderr.write(line)
 
 class Parser(argparse.ArgumentParser):
   def error(self, message):
@@ -61,22 +68,13 @@ def bisect(args):
   elif args.log:
     state = 'log'
   else:
-    sys.stderr.write('Nothing to do. Use -h for help.' + '\n')
+    err('Nothing to do. Use -h for help.' + '\n')
     sys.exit(1)
-  print commit
-  proc = subprocess.Popen(
-    ['git', 'bisect', state, commit],
-    stdout = subprocess.PIPE,
-    stderr = subprocess.PIPE,
-    stdin  = subprocess.PIPE
-  )
 
-  stdout, stderr = proc.communicate()
-  returncode = proc.wait()
-  sys.stdout.write(stdout)
-  sys.stderr.write(stderr)
-
-  return returncode
+  try:
+    sh.git.bisect(state, commit, _out=out, _err=err)
+  except:
+    pass
 
 def main():
   parser = Parser(description='Bisect Linux kernel')
